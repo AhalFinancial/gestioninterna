@@ -53,7 +53,16 @@ function HomeContent() {
       return;
     }
 
-    // Check authentication and root folder
+    // Check for root folder first - show modal before authentication
+    const rootFolderId = localStorage.getItem("ahal_root_folder");
+    if (rootFolderId) {
+      setRootFolderId(rootFolderId);
+    } else {
+      // Show config modal before checking authentication
+      setShowConfig(true);
+    }
+
+    // Check authentication separately (but don't block modal from showing)
     const checkAuth = async () => {
       try {
         const res = await fetch("/api/drive/list", {
@@ -63,10 +72,9 @@ function HomeContent() {
         });
         if (res.ok) {
           setIsAuthenticated(true);
-          const rootFolderId = localStorage.getItem("ahal_root_folder");
-          if (rootFolderId) {
-            setRootFolderId(rootFolderId);
-          } else {
+          // If authenticated but no root folder, show modal again
+          const currentRootFolder = localStorage.getItem("ahal_root_folder");
+          if (!currentRootFolder) {
             setShowConfig(true);
           }
         }
@@ -518,6 +526,7 @@ function HomeContent() {
         isOpen={showConfig}
         onClose={() => setShowConfig(false)}
         onSave={handleSaveConfig}
+        isAuthenticated={isAuthenticated}
       />
 
       <SettingsModal

@@ -7,18 +7,19 @@ interface ConfigModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (folderId: string) => void;
+    isAuthenticated?: boolean;
 }
 
-export default function ConfigModal({ isOpen, onClose, onSave }: ConfigModalProps) {
+export default function ConfigModal({ isOpen, onClose, onSave, isAuthenticated = false }: ConfigModalProps) {
     const [folderId, setFolderId] = useState("");
     const [folders, setFolders] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && isAuthenticated) {
             fetchFolders();
         }
-    }, [isOpen]);
+    }, [isOpen, isAuthenticated]);
 
     const fetchFolders = async () => {
         setLoading(true);
@@ -66,7 +67,12 @@ export default function ConfigModal({ isOpen, onClose, onSave }: ConfigModalProp
                 </p>
 
                 <div className="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2">
-                    {loading ? (
+                    {!isAuthenticated ? (
+                        <div className="text-center text-slate-400 py-4">
+                            <p className="mb-2">Please connect to Google Drive first to view your folders.</p>
+                            <p className="text-sm text-slate-500">Click "Connect to Google Drive" in the navigation bar.</p>
+                        </div>
+                    ) : loading ? (
                         <div className="text-center text-slate-500 py-4">Loading folders...</div>
                     ) : folders.length === 0 ? (
                         <div className="text-center text-slate-500 py-4">No folders found</div>
@@ -93,7 +99,7 @@ export default function ConfigModal({ isOpen, onClose, onSave }: ConfigModalProp
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={!folderId}
+                        disabled={!folderId || !isAuthenticated}
                         className="btn btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Save size={16} />
