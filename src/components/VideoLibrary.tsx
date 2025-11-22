@@ -27,6 +27,7 @@ interface VideoLibraryProps {
     setFolderHistory: (history: { id: string, name: string }[]) => void;
     activeSection: "my-videos" | "team" | "recent";
     setActiveSection: (section: "my-videos" | "team" | "recent") => void;
+    rootFolderId?: string;
 }
 
 export default function VideoLibrary({
@@ -36,7 +37,8 @@ export default function VideoLibrary({
     folderHistory,
     setFolderHistory,
     activeSection,
-    setActiveSection
+    setActiveSection,
+    rootFolderId
 }: VideoLibraryProps) {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [videos, setVideos] = useState<VideoItem[]>([]);
@@ -45,17 +47,21 @@ export default function VideoLibrary({
     const [selectedVideoForMove, setSelectedVideoForMove] = useState<VideoItem | null>(null);
 
     useEffect(() => {
-        const rootId = localStorage.getItem("ahal_root_folder");
-        if (activeSection === "my-videos" && rootId) {
-            if (folderHistory.length === 0) {
-                setCurrentFolderId(rootId);
+        if (activeSection === "my-videos") {
+            if (!rootFolderId) {
+                return;
+            }
+            if (folderHistory.length === 0 && currentFolderId !== rootFolderId) {
+                setCurrentFolderId(rootFolderId);
             }
         } else if (activeSection === "team") {
-            if (folderHistory.length === 0) {
+            if (folderHistory.length === 0 && currentFolderId !== TEAM_FOLDER_ID) {
                 setCurrentFolderId(TEAM_FOLDER_ID);
             }
+        } else if (activeSection === "recent" && currentFolderId !== "") {
+            setCurrentFolderId("");
         }
-    }, [activeSection, folderHistory.length, setCurrentFolderId]);
+    }, [activeSection, folderHistory.length, rootFolderId, currentFolderId, setCurrentFolderId]);
 
     useEffect(() => {
         if (currentFolderId) {
@@ -136,7 +142,7 @@ export default function VideoLibrary({
     const handleBreadcrumbClick = (index: number) => {
         if (index === -1) {
             setFolderHistory([]);
-            const rootId = activeSection === "team" ? TEAM_FOLDER_ID : localStorage.getItem("ahal_root_folder") || "";
+            const rootId = activeSection === "team" ? TEAM_FOLDER_ID : rootFolderId || "";
             setCurrentFolderId(rootId);
         } else {
             const newHistory = folderHistory.slice(0, index + 1);
@@ -214,7 +220,7 @@ export default function VideoLibrary({
         const folderName = prompt("Enter folder name:");
         if (!folderName) return;
 
-        const parentId = currentFolderId || (activeSection === "team" ? TEAM_FOLDER_ID : localStorage.getItem("ahal_root_folder"));
+        const parentId = currentFolderId || (activeSection === "team" ? TEAM_FOLDER_ID : rootFolderId);
 
         try {
             await fetch("/api/drive/create-folder", {
@@ -245,13 +251,13 @@ export default function VideoLibrary({
                             icon={<Video size={18} />}
                             label="My Videos"
                             active={activeSection === "my-videos"}
-                            onClick={() => { setActiveSection("my-videos"); setFolderHistory([]); setCurrentFolderId(""); }}
+                            onClick={() => { setActiveSection("my-videos"); setFolderHistory([]); setCurrentFolderId(rootFolderId || ""); }}
                         />
                         <NavItem
                             icon={<Folder size={18} />}
                             label="Team Library"
                             active={activeSection === "team"}
-                            onClick={() => { setActiveSection("team"); setFolderHistory([]); setCurrentFolderId(""); }}
+                            onClick={() => { setActiveSection("team"); setFolderHistory([]); setCurrentFolderId(TEAM_FOLDER_ID); }}
                         />
                         <NavItem
                             icon={<Clock size={18} />}

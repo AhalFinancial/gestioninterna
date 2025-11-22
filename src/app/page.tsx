@@ -89,6 +89,10 @@ function HomeContent() {
   const handleSaveConfig = (folderId: string) => {
     setRootFolderId(folderId);
     localStorage.setItem("ahal_root_folder", folderId);
+    if (activeSection === "my-videos") {
+      setCurrentFolderId(folderId);
+      setFolderHistory([]);
+    }
     setShowConfig(false);
   };
 
@@ -429,6 +433,7 @@ function HomeContent() {
               setFolderHistory={setFolderHistory}
               activeSection={activeSection}
               setActiveSection={setActiveSection}
+              rootFolderId={rootFolderId}
             />
           </div>
         )}
