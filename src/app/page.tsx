@@ -561,7 +561,20 @@ function HomeContent() {
       <ShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
-        videoUrl={selectedVideo?.src || ""}
+        videoUrl={(() => {
+          if (!selectedVideo?.src) return "";
+          // If it's a relative path, prepend origin
+          if (selectedVideo.src.startsWith("/")) {
+             return typeof window !== "undefined" ? `${window.location.origin}${selectedVideo.src}` : selectedVideo.src;
+          }
+          // If it's a blob URL (new recording), we should probably use the fileId if available
+          if (selectedVideo.src.startsWith("blob:") && selectedVideo.id && selectedVideo.id !== "temp") {
+             return typeof window !== "undefined" 
+               ? `${window.location.origin}/api/drive/fetch-video?fileId=${selectedVideo.id}` 
+               : "";
+          }
+          return selectedVideo.src;
+        })()}
         videoTitle={selectedVideo?.title || ""}
       />
     </div>
