@@ -26,7 +26,22 @@ export default function SharedVideoPage() {
                 });
 
                 if (listRes.ok) {
-                    setIsAuthenticated(true);
+                    // The list endpoint returns { files: [] } even if not authenticated (line 14 of list/route.ts)
+                    // We need a better way to check strict authentication.
+                    // Let's try to fetch metadata first, which should fail if no token.
+                    // Or we can rely on listRes checking.
+                    
+                    // Actually, looking at list/route.ts:
+                    // if (!tokensStr) { return NextResponse.json({ files: [] }); }
+                    // It returns 200 OK with empty files! This is why isAuthenticated was true.
+                    
+                    // We need an endpoint that returns 401. 
+                    // api/drive/fetch-video returns 401.
+                    // api/drive/load-metadata returns 401? 
+                    // Let's check load-metadata.
+                    
+                    // Instead of relying on list, let's use load-metadata directly.
+                    // If that fails with 401, we know we need auth.
                     loadVideoMetadata();
                 } else {
                     setIsAuthenticated(false);
