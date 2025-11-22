@@ -5,7 +5,21 @@ import { cookies } from "next/headers";
 export async function POST(req: Request) {
     try {
         const { code } = await req.json();
+        
+        if (!code) {
+            console.error("No authorization code provided");
+            return NextResponse.json({ error: "No authorization code provided" }, { status: 400 });
+        }
+
+        // Verify environment variables are set
+        if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+            console.error("Missing Google OAuth credentials");
+            return NextResponse.json({ error: "OAuth credentials not configured" }, { status: 500 });
+        }
+
+        console.log("Exchanging authorization code for tokens...");
         const { tokens } = await oauth2Client.getToken(code);
+        console.log("Tokens received successfully");
 
         oauth2Client.setCredentials(tokens);
 
@@ -14,13 +28,21 @@ export async function POST(req: Request) {
         cookieStore.set("google_tokens", JSON.stringify(tokens), {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
             maxAge: 60 * 60 * 24 * 7, // 1 week
             path: "/",
         });
 
         return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error("Auth error:", error);
-        return NextResponse.json({ error: "Authentication failed" }, { status: 500 });
+    } catch (error: any) {
+        console.error("Auth error details:", {
+            message: error.message,
+            code: error.code,
+            response: error.response?.data,
+        });
+        return NextResponse.json({ 
+            error: "Authentication failed",
+            details: error.message 
+        }, { status: 500 });
     }
 }
