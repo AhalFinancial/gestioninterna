@@ -90,7 +90,7 @@ Click **Environment Variables** section to expand it, then add each variable:
 4. **DATABASE_URL** (You'll set this in Step 3)
    - Click **+ Add Another**
    - Name: `DATABASE_URL`
-   - Value: *(Leave empty for now - we'll add it after setting up database)*
+   - Value: *(Add your connection string after setting up database - Example: `postgresql://user:password@host:5432/postgres`)*
    - Select environments: ✅ Production ✅ Preview ✅ Development
    - Click **Save**
 
@@ -111,26 +111,35 @@ Click **Environment Variables** section to expand it, then add each variable:
 
 You have two options:
 
-### Option A: Use Vercel Postgres (Easiest - Recommended)
+### Option A: Use Marketplace Database Provider (Recommended)
 
-1. **Create Database:**
-   - In the Vercel dashboard, go to your project
-   - Click the **Storage** tab
-   - Click **Create Database**
-   - Select **Postgres**
-   - Choose a name (e.g., `ahal-clips-db`)
+Since you're using Prisma with PostgreSQL, choose one of these from the Marketplace:
+
+#### Best Option: Prisma Postgres
+
+1. **Select Database Provider:**
+   - In the Vercel Storage tab, click **Create New**
+   - You'll see "Marketplace Database Providers" screen
+   - **Recommended:** Click on **Prisma Postgres** (shows "Instant Serverless Postgres")
+   - Or choose **Supabase** ("Postgres backend") as alternative
+   - Click **Continue**
+
+2. **Set Up Database:**
+   - If first time, you'll be asked to connect your account
+   - Sign in to Prisma (or create account if needed)
+   - Authorize Vercel to access Prisma
+   - Choose or create a Prisma project
+   - Select a database name (e.g., `ahal-clips-db`)
    - Select a region (choose closest to your users)
-   - Click **Create**
 
-2. **Copy Connection String:**
+3. **Connection String:**
    - Once created, Vercel will automatically add `DATABASE_URL` to your environment variables
    - ✅ You're done with database setup!
 
-3. **Run Migrations:**
-   - Go back to your project settings
-   - Go to **Settings** → **Environment Variables**
-   - Copy the `DATABASE_URL` value
-   - Run migrations locally or wait for first deployment
+4. **Run Migrations:**
+   - After deployment, the database will be ready
+   - You can run migrations locally: `npx prisma migrate deploy`
+   - Or they'll run automatically during build if configured
 
 ### Option B: Use External Database (Neon, Supabase, Railway)
 

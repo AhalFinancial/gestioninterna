@@ -60,13 +60,19 @@ Add these BEFORE deploying:
 
 Choose one:
 
-### Option A: Vercel Postgres
+### Option A: Marketplace Database Provider
 
 - [ ] Go to **Storage** tab in project
-- [ ] Click **Create Database** → **Postgres**
-- [ ] Name it (e.g., `ahal-clips-db`)
+- [ ] Click **Create New**
+- [ ] See "Marketplace Database Providers" screen
+- [ ] Select **Prisma Postgres** ("Instant Serverless Postgres") ⭐ Recommended
+- [ ] Or select **Supabase** ("Postgres backend") as alternative
+- [ ] Click **Continue**
+- [ ] Connect account (if first time)
+- [ ] Create/select project
+- [ ] Name database (e.g., `ahal-clips-db`)
 - [ ] Select region
-- [ ] Click **Create**
+- [ ] Complete setup
 - [ ] ✅ `DATABASE_URL` is automatically added
 
 ### Option B: External Database (Neon/Supabase/Railway)
