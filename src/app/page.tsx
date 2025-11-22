@@ -42,10 +42,16 @@ function HomeContent() {
     const code = urlParams.get("code");
 
     if (code) {
+      // Calculate redirectUri same way as in handleLogin to match
+      let redirectUri = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      redirectUri = redirectUri.replace(/\/$/, '');
+      const redirectPath = '/api/auth/exchange';
+      const finalRedirectUri = redirectUri + redirectPath;
+
       fetch("/api/auth/exchange", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, redirectUri: finalRedirectUri }),
       }).then(() => {
         window.history.replaceState({}, "", "/");
         window.location.reload();

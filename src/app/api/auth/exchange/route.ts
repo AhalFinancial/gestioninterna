@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
     try {
-        const { code } = await req.json();
+        const { code, redirectUri } = await req.json();
         
         if (!code) {
             console.error("No authorization code provided");
@@ -15,6 +15,14 @@ export async function POST(req: Request) {
         if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
             console.error("Missing Google OAuth credentials");
             return NextResponse.json({ error: "OAuth credentials not configured" }, { status: 500 });
+        }
+
+        // If redirectUri is provided, set it in the client
+        if (redirectUri) {
+            console.log("Using custom redirect URI:", redirectUri);
+            oauth2Client.redirectUri = redirectUri;
+        } else {
+            console.log("Using default redirect URI from config");
         }
 
         console.log("Exchanging authorization code for tokens...");
