@@ -85,24 +85,43 @@ function HomeContent() {
   };
 
   const handleLogin = () => {
-    // Redirect to Google Auth
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    
-    if (!clientId) {
-      console.error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set!");
-      alert("Google OAuth is not configured. Please check environment variables.");
-      return;
-    }
+    try {
+      console.log("Login button clicked");
+      console.log("Environment check:", {
+        hasWindow: typeof window !== 'undefined',
+        origin: typeof window !== 'undefined' ? window.location.origin : 'N/A',
+      });
+      
+      // Redirect to Google Auth
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      console.log("Client ID check:", clientId ? "Set" : "NOT SET");
+      
+      if (!clientId) {
+        console.error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set!");
+        alert("Google OAuth is not configured. Please check environment variables.\n\nCheck Vercel → Settings → Environment Variables → NEXT_PUBLIC_GOOGLE_CLIENT_ID");
+        return;
+      }
 
-    // Get redirect URI and remove trailing slash if present
-    let redirectUri = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : "http://localhost:3000");
-    redirectUri = redirectUri.replace(/\/$/, ''); // Remove trailing slash
-    
-    const scope = "https://www.googleapis.com/auth/drive.file";
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri + '/api/auth/exchange')}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-    
-    console.log("Redirecting to Google OAuth:", url);
-    window.location.href = url;
+      // Get redirect URI and remove trailing slash if present
+      let redirectUri = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : "http://localhost:3000");
+      redirectUri = redirectUri.replace(/\/$/, ''); // Remove trailing slash
+      
+      console.log("Redirect URI:", redirectUri);
+      
+      const scope = "https://www.googleapis.com/auth/drive.file";
+      const redirectPath = '/api/auth/exchange';
+      const finalRedirectUri = redirectUri + redirectPath;
+      
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(finalRedirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
+      
+      console.log("Full OAuth URL:", url);
+      console.log("Redirecting to Google OAuth...");
+      
+      window.location.href = url;
+    } catch (error: any) {
+      console.error("Login error:", error);
+      alert(`Error connecting to Google Drive: ${error.message}\n\nCheck browser console for details.`);
+    }
   };
 
   const handleStartRecording = () => {
