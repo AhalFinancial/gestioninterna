@@ -539,6 +539,7 @@ function HomeContent() {
         onClose={() => setShowSettings(false)}
         onLogout={() => setIsAuthenticated(false)}
         onChangeFolder={() => { setShowSettings(false); setShowConfig(true); }}
+        onReconnect={() => { setShowSettings(false); handleLogin(); }}
       />
 
       <MoveModal

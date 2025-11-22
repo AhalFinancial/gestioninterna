@@ -9,9 +9,10 @@ interface SettingsModalProps {
     onClose: () => void;
     onLogout: () => void;
     onChangeFolder: () => void;
+    onReconnect: () => void;
 }
 
-export default function SettingsModal({ isOpen, onClose, onLogout, onChangeFolder }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, onLogout, onChangeFolder, onReconnect }: SettingsModalProps) {
     const { language, setLanguage, t } = useI18n();
     const [rootFolder, setRootFolder] = useState(localStorage.getItem("ahal_root_folder") || "");
 
@@ -81,7 +82,7 @@ export default function SettingsModal({ isOpen, onClose, onLogout, onChangeFolde
                                 ? "Manage your Google Drive connection and permissions."
                                 : "Administra tu conexión y permisos de Google Drive."}
                         </p>
-                        <button className="btn btn-secondary w-full">
+                        <button onClick={onReconnect} className="btn btn-secondary w-full">
                             <RefreshCw size={16} />
                             {t("settings.reconnect")}
                         </button>
