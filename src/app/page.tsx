@@ -53,8 +53,15 @@ function HomeContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, redirectUri: finalRedirectUri }),
       }).then(() => {
-        window.history.replaceState({}, "", "/");
-        window.location.reload();
+        // Check if there's a return URL stored
+        const returnUrl = localStorage.getItem("ahal_return_url");
+        if (returnUrl) {
+          localStorage.removeItem("ahal_return_url");
+          window.location.href = returnUrl;
+        } else {
+          window.history.replaceState({}, "", "/");
+          window.location.reload();
+        }
       });
       return;
     }
@@ -562,18 +569,9 @@ function HomeContent() {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         videoUrl={(() => {
-          if (!selectedVideo?.src) return "";
-          // If it's a relative path, prepend origin
-          if (selectedVideo.src.startsWith("/")) {
-             return typeof window !== "undefined" ? `${window.location.origin}${selectedVideo.src}` : selectedVideo.src;
-          }
-          // If it's a blob URL (new recording), we should probably use the fileId if available
-          if (selectedVideo.src.startsWith("blob:") && selectedVideo.id && selectedVideo.id !== "temp") {
-             return typeof window !== "undefined" 
-               ? `${window.location.origin}/api/drive/fetch-video?fileId=${selectedVideo.id}` 
-               : "";
-          }
-          return selectedVideo.src;
+          if (!selectedVideo?.id || selectedVideo.id === "temp") return "";
+          const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+          return `${baseUrl}/share/${selectedVideo.id}`;
         })()}
         videoTitle={selectedVideo?.title || ""}
       />
