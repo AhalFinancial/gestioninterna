@@ -61,9 +61,7 @@ export default function SharedVideoPage() {
             } finally {
                 setLoading(false);
             }
-        };
 
-        checkAuthAndLoad();
     }, [id]);
 
     // Removed duplicate loadVideoMetadata function as it's integrated above
