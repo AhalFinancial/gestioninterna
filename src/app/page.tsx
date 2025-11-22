@@ -45,8 +45,8 @@ function HomeContent() {
       // Calculate redirectUri same way as in handleLogin to match
       let redirectUri = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       redirectUri = redirectUri.replace(/\/$/, '');
-      const redirectPath = '/api/auth/exchange';
-      const finalRedirectUri = redirectUri + redirectPath;
+      // The redirect URI sent to Google was the base URL, so we must verify with the same one
+      const finalRedirectUri = redirectUri;
 
       fetch("/api/auth/exchange", {
         method: "POST",
@@ -127,8 +127,9 @@ function HomeContent() {
       console.log("Redirect URI:", redirectUri);
       
       const scope = "https://www.googleapis.com/auth/drive.file";
-      const redirectPath = '/api/auth/exchange';
-      const finalRedirectUri = redirectUri + redirectPath;
+      // The redirect URI should be the page itself where we handle the code, not the API route
+      // Google redirects here -> We get code -> We POST code + redirectUri to API
+      const finalRedirectUri = redirectUri;
       
       const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(finalRedirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
       
