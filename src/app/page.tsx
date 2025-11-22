@@ -126,7 +126,9 @@ function HomeContent() {
       
       console.log("Redirect URI:", redirectUri);
       
-      const scope = "https://www.googleapis.com/auth/drive.file";
+      // Use 'drive' scope to allow access to all files/folders, including the shared Team Folder
+      // and the user's root folder. 'drive.file' only allows access to files created by the app.
+      const scope = "https://www.googleapis.com/auth/drive";
       // The redirect URI should be the page itself where we handle the code, not the API route
       // Google redirects here -> We get code -> We POST code + redirectUri to API
       const finalRedirectUri = redirectUri;

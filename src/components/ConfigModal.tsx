@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Folder, Save, X } from "lucide-react";
+import { Folder, Save, X, FolderOpen } from "lucide-react";
 
 interface ConfigModalProps {
     isOpen: boolean;
@@ -65,6 +65,25 @@ export default function ConfigModal({ isOpen, onClose, onSave, isAuthenticated =
                 <p className="text-slate-400 text-sm mb-4">
                     Choose a Google Drive folder where your "My Videos" will be saved.
                 </p>
+
+                <div className="mb-4">
+                    <button
+                        onClick={() => onSave("root")}
+                        className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/20 transition font-medium"
+                    >
+                        <FolderOpen size={18} />
+                        Use "My Drive" Root Folder
+                    </button>
+                </div>
+
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                        <div className="w-full border-t border-white/10"></div>
+                    </div>
+                    <div className="relative flex justify-center my-4">
+                        <span className="bg-slate-900 px-2 text-xs text-slate-500 uppercase tracking-wider">Or select subfolder</span>
+                    </div>
+                </div>
 
                 <div className="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2">
                     {!isAuthenticated ? (
