@@ -15,41 +15,50 @@ export default function SharedVideoPage() {
     const [error, setError] = useState("");
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // Changed from false to null for loading state
 
-    useEffect(() => {
-        const checkAuthAndLoad = async () => {
             try {
-                // Check auth first
-                const listRes = await fetch("/api/drive/list", {
+                // Directly try to load metadata. This requires authentication (returns 401 if missing).
+                // We skip the misleading 'list' check.
+                const res = await fetch("/api/drive/load-metadata", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({}),
+                    body: JSON.stringify({ videoId: id }),
                 });
 
-                if (listRes.ok) {
-                    // The list endpoint returns { files: [] } even if not authenticated (line 14 of list/route.ts)
-                    // We need a better way to check strict authentication.
-                    // Let's try to fetch metadata first, which should fail if no token.
-                    // Or we can rely on listRes checking.
-                    
-                    // Actually, looking at list/route.ts:
-                    // if (!tokensStr) { return NextResponse.json({ files: [] }); }
-                    // It returns 200 OK with empty files! This is why isAuthenticated was true.
-                    
-                    // We need an endpoint that returns 401. 
-                    // api/drive/fetch-video returns 401.
-                    // api/drive/load-metadata returns 401? 
-                    // Let's check load-metadata.
-                    
-                    // Instead of relying on list, let's use load-metadata directly.
-                    // If that fails with 401, we know we need auth.
-                    loadVideoMetadata();
-                } else {
+                if (res.ok) {
+                    setIsAuthenticated(true);
+                    const data = await res.json();
+                    setVideo({
+                        id: id,
+                        title: data.metadata?.title || "Shared Video", 
+                        src: `/api/drive/fetch-video?fileId=${id}`,
+                        duration: data.metadata?.duration || "0:00",
+                        date: data.metadata?.createdAt ? new Date(data.metadata.createdAt).toLocaleDateString() : "",
+                        description: data.metadata?.description || ""
+                    });
+                } else if (res.status === 401) {
+                    // Explicitly handle 401 Unauthorized
+                    console.log("Not authenticated (401)");
                     setIsAuthenticated(false);
-                    setLoading(false);
+                } else {
+                     // Other errors (404, 500, etc.)
+                     // If we can't load metadata but it's not 401, maybe it's a public file or just metadata missing?
+                     // But our API requires auth for everything.
+                     // Let's assume if it's not OK, we treat it as auth failure or error.
+                     console.warn("Metadata load failed with status:", res.status);
+                     
+                     // If 500 or 400, it might be authenticated but failed.
+                     // But safer to assume 401-like behavior or show error?
+                     // If we assume false, they get login screen.
+                     // If we assume true, they get broken page.
+                     
+                     // Let's retry check with a simpler auth check?
+                     // No, let's treat non-200 as failed auth/access for now.
+                     setIsAuthenticated(false);
                 }
             } catch (err) {
                 console.error("Auth check failed", err);
                 setIsAuthenticated(false);
+            } finally {
                 setLoading(false);
             }
         };
@@ -57,46 +66,8 @@ export default function SharedVideoPage() {
         checkAuthAndLoad();
     }, [id]);
 
-    const loadVideoMetadata = async () => {
-        try {
-            // Load metadata
-            const res = await fetch("/api/drive/load-metadata", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ videoId: id }),
-            });
+    // Removed duplicate loadVideoMetadata function as it's integrated above
 
-            if (res.ok) {
-                const data = await res.json();
-                setVideo({
-                    id: id,
-                    title: data.metadata?.title || "Shared Video", // Fallback title if not in metadata
-                    src: `/api/drive/fetch-video?fileId=${id}`,
-                    duration: data.metadata?.duration || "0:00",
-                    date: data.metadata?.createdAt ? new Date(data.metadata.createdAt).toLocaleDateString() : "",
-                    description: data.metadata?.description || ""
-                });
-            } else {
-                // If metadata fails, we might still try to play the video if it exists
-                // But for now, let's assume we at least need to verify it exists.
-                // We can try to fetch the video stream head or something, but let's just set basic info.
-                console.warn("Metadata load failed, using basic info");
-                setVideo({
-                    id: id,
-                    title: "Shared Video",
-                    src: `/api/drive/fetch-video?fileId=${id}`,
-                    duration: "0:00",
-                    date: "",
-                    description: ""
-                });
-            }
-        } catch (err) {
-            console.error("Error loading metadata", err);
-            setError("Failed to load video info");
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleLogin = () => {
         try {
