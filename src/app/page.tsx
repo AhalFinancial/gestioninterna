@@ -87,9 +87,9 @@ export default function Home() {
   const handleLogin = () => {
     // Redirect to Google Auth
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const redirectUri = "http://localhost:3000";
+    const redirectUri = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : "http://localhost:3000");
     const scope = "https://www.googleapis.com/auth/drive.file";
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
     window.location.href = url;
   };
 
