@@ -87,9 +87,21 @@ function HomeContent() {
   const handleLogin = () => {
     // Redirect to Google Auth
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : "http://localhost:3000");
+    
+    if (!clientId) {
+      console.error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set!");
+      alert("Google OAuth is not configured. Please check environment variables.");
+      return;
+    }
+
+    // Get redirect URI and remove trailing slash if present
+    let redirectUri = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : "http://localhost:3000");
+    redirectUri = redirectUri.replace(/\/$/, ''); // Remove trailing slash
+    
     const scope = "https://www.googleapis.com/auth/drive.file";
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri + '/api/auth/exchange')}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
+    
+    console.log("Redirecting to Google OAuth:", url);
     window.location.href = url;
   };
 
