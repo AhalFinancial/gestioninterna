@@ -13,7 +13,7 @@ export default function SharedVideoPage() {
     const [video, setVideo] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // Changed from false to null for loading state
 
     useEffect(() => {
         const checkAuthAndLoad = async () => {
@@ -140,7 +140,7 @@ export default function SharedVideoPage() {
         }
     };
 
-    if (loading) {
+    if (loading || isAuthenticated === null) {
         return (
             <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
                 <div className="text-slate-400">Loading shared video...</div>
