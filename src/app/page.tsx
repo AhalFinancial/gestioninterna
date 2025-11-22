@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Recorder from "@/components/Recorder";
 import VideoLibrary from "@/components/VideoLibrary";
@@ -13,7 +13,7 @@ import ShareModal from "@/components/ShareModal";
 import { Plus, ArrowLeft, UploadCloud, LogIn, Settings as SettingsIcon, Download, Trash2, FolderInput, Share2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
-export default function Home() {
+function HomeContent() {
   const { t } = useI18n();
   const [currentView, setCurrentView] = useState<"library" | "recorder" | "player">("library");
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
@@ -510,5 +510,15 @@ export default function Home() {
         videoTitle={selectedVideo?.title || ""}
       />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+      <div className="text-slate-400">Loading...</div>
+    </div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
