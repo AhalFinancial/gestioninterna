@@ -79,3 +79,4 @@ C:\Users\<YourUsername>\AppData\Roaming\Cursor\User\settings.json
 The `.cursor-mcp-config.json` file has been added to `.gitignore` to protect your API key. Never commit API keys to version control!
 
 
+

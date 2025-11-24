@@ -119,3 +119,4 @@ After running migrations, these tables will be created in your Supabase database
 **Keep this connection string secure!** 🔒
 
 
+

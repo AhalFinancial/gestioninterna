@@ -26,6 +26,7 @@ export default function Recorder({ onRecordingComplete }: { onRecordingComplete:
     const animationFrameRef = useRef<number | null>(null);
     const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const isRecordingRef = useRef(false); // Ref to track recording state synchronously
+    const workerRef = useRef<Worker | null>(null);
 
     useEffect(() => {
         return () => {
@@ -95,6 +96,23 @@ export default function Recorder({ onRecordingComplete }: { onRecordingComplete:
             canvas.width = width || 1920;
             canvas.height = height || 1080;
 
+            // Create a Web Worker to handle the timing loop
+            // This prevents the browser from throttling the loop when the tab is in the background
+            const workerBlob = new Blob([`
+                let intervalId;
+                self.onmessage = function(e) {
+                    if (e.data === 'start') {
+                        intervalId = setInterval(() => {
+                            postMessage('tick');
+                        }, 1000 / 30); // 30 FPS
+                    } else if (e.data === 'stop') {
+                        clearInterval(intervalId);
+                    }
+                };
+            `], { type: 'application/javascript' });
+
+            const worker = new Worker(URL.createObjectURL(workerBlob));
+
             const draw = () => {
                 if (!ctx || !videoRef.current || !cameraRef.current) return;
 
@@ -118,20 +136,11 @@ export default function Recorder({ onRecordingComplete }: { onRecordingComplete:
                 ctx.lineWidth = 5;
                 ctx.strokeStyle = "#6366f1";
                 ctx.stroke();
-
-                animationFrameRef.current = requestAnimationFrame(draw);
             };
-
-            if (videoRef.current) {
-                videoRef.current.srcObject = previewStream;
-                videoRef.current.play();
-            }
             if (cameraRef.current) {
                 cameraRef.current.srcObject = previewCameraStream;
                 cameraRef.current.play();
             }
-
-            draw();
 
             const canvasStream = canvas.captureStream(30);
             previewCameraStream.getAudioTracks().forEach(track => canvasStream.addTrack(track));
@@ -246,6 +255,10 @@ export default function Recorder({ onRecordingComplete }: { onRecordingComplete:
         }
         if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
         if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+        if (workerRef.current) {
+            workerRef.current.terminate();
+            workerRef.current = null;
+        }
 
         setStream(null);
         setCameraStream(null);

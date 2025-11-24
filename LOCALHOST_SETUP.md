@@ -186,3 +186,4 @@ Once everything is working on localhost:
 **Note:** The `.env.local` file is gitignored and won't be committed to version control. This keeps your local configuration separate from production settings.
 
 
+

@@ -37,8 +37,6 @@ export async function POST(req: Request) {
         const base64 = buffer.toString("base64");
         console.log(`✅ Base64 size: ${(base64.length / (1024 * 1024)).toFixed(2)}MB`);
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
         const prompt = `Transcribe this ${file.type.startsWith('audio/') ? 'audio' : 'video'} accurately. The audio may be in Spanish or English. 
 Generate a timestamped transcript as a JSON array with objects containing:
 - "time": timestamp in MM:SS format
@@ -48,71 +46,71 @@ Generate a timestamped transcript as a JSON array with objects containing:
 Be very accurate with the transcription. Listen carefully to what is actually being said.
 Return ONLY the JSON array, no additional text or markdown.`;
 
-        // Retry logic for handling temporary 500 errors
+        const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
         let lastError;
-        const maxRetries = 3;
 
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                console.log(`\n🚀 Sending to Gemini API (Attempt ${attempt}/${maxRetries})...`);
+        for (const modelName of models) {
+            console.log(`\n🤖 Using Gemini model: ${modelName}`);
+            const model = genAI.getGenerativeModel({ model: modelName });
 
-                const result = await model.generateContent([
-                    prompt,
-                    {
-                        inlineData: {
-                            data: base64,
-                            mimeType: file.type || (file.name.endsWith('.webm') ? "audio/webm" : "video/webm"),
-                        },
-                    },
-                ]);
+            const maxRetries = 2; // Reduced retries per model since we have multiple models
 
-                const response = await result.response;
-                const text = response.text();
-
-                console.log("✅ Received response from Gemini");
-
-                // Clean up markdown code blocks if present
-                const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
-
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
-                    const transcript = JSON.parse(cleanJson);
-                    console.log(`✅ Transcript parsed successfully: ${transcript.length} segments`);
-                    return NextResponse.json({ transcript });
-                } catch (e) {
-                    console.error("❌ Failed to parse JSON:", text.substring(0, 200));
-                    return NextResponse.json({ transcript: [], raw: text });
-                }
-            } catch (error: any) {
-                lastError = error;
+                    console.log(`🚀 Sending to Gemini API (${modelName}, Attempt ${attempt}/${maxRetries})...`);
 
-                // Log full error details
-                console.error(`\n=== ❌ TRANSCRIPTION ERROR (Attempt ${attempt}/${maxRetries}) ===`);
-                console.error("Error message:", error.message);
-                console.error("Error name:", error.name);
-                if (error.response) {
-                    console.error("Error response:", JSON.stringify(error.response, null, 2));
-                }
-                if (error.status) {
-                    console.error("Error status:", error.status);
-                }
-                if (error.stack) {
-                    console.error("Stack trace:", error.stack.split('\n').slice(0, 5).join('\n'));
-                }
-                console.error("=== END ERROR ===\n");
+                    const result = await model.generateContent([
+                        prompt,
+                        {
+                            inlineData: {
+                                data: base64,
+                                mimeType: file.type || (file.name.endsWith('.webm') ? "audio/webm" : "video/webm"),
+                            },
+                        },
+                    ]);
 
-                const is500Error = error.message?.includes("500") || error.message?.includes("Internal");
+                    const response = await result.response;
+                    const text = response.text();
 
-                if (is500Error && attempt < maxRetries) {
-                    const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s
-                    console.log(`🔄 500 error detected, retrying in ${waitTime}ms...`);
-                    await new Promise(resolve => setTimeout(resolve, waitTime));
-                    continue;
+                    console.log(`✅ Received response from Gemini (${modelName})`);
+
+                    // Clean up markdown code blocks if present
+                    const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
+
+                    try {
+                        const transcript = JSON.parse(cleanJson);
+                        console.log(`✅ Transcript parsed successfully: ${transcript.length} segments`);
+                        return NextResponse.json({ transcript });
+                    } catch (e) {
+                        console.error(`❌ Failed to parse JSON from ${modelName}:`, text.substring(0, 200));
+                        // If JSON parsing fails, it might be the model's fault, try next model? 
+                        // Or maybe just throw to retry? 
+                        // Let's throw to trigger retry or next model
+                        throw new Error("JSON parse error");
+                    }
+                } catch (error: any) {
+                    lastError = error;
+
+                    console.error(`\n=== ❌ TRANSCRIPTION ERROR (${modelName}, Attempt ${attempt}/${maxRetries}) ===`);
+                    console.error("Error message:", error.message);
+
+                    const is500Error = error.message?.includes("500") || error.message?.includes("Internal");
+
+                    if (is500Error && attempt < maxRetries) {
+                        const waitTime = 1000 * attempt;
+                        console.log(`🔄 500 error detected, retrying in ${waitTime}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        continue;
+                    }
+
+                    // If it's not a 500 error, or we ran out of retries for this model, break inner loop to try next model
+                    break;
                 }
-
-                // If not a 500 error or we've exhausted retries, throw
-                throw error;
             }
         }
+
+        // If we get here, all models failed
+        if (lastError) throw lastError;
 
         throw lastError;
 
