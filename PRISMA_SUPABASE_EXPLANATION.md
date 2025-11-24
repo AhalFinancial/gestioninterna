@@ -152,3 +152,4 @@ This tells you:
 
 **Bottom line: Supabase and Prisma are a great combination!** 🚀
 
+

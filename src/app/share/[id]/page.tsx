@@ -15,8 +15,6 @@ export default function SharedVideoPage() {
     const [error, setError] = useState("");
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // Changed from false to null for loading state
 
-    useEffect(() => {
-        const checkAuthAndLoad = async () => {
             try {
                 // Directly try to load metadata. This requires authentication (returns 401 if missing).
                 // We skip the misleading 'list' check.
@@ -218,3 +216,4 @@ export default function SharedVideoPage() {
         </div>
     );
 }
+

@@ -122,3 +122,4 @@ C:\Users\<YourUsername>\AppData\Roaming\Cursor\User\settings.json
 
 See `SUPABASE_MCP_SETUP.md` for detailed setup instructions and troubleshooting.
 
+

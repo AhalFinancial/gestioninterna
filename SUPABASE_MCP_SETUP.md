@@ -157,3 +157,4 @@ Based on your project files, you're using Supabase with:
 - [Supabase Dashboard](https://supabase.com/dashboard)
 - [Package Repository](https://github.com/supabase/mcp-server-supabase)
 
+

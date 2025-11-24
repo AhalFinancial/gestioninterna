@@ -543,6 +543,18 @@ function HomeContent() {
         )}
       </div>
 
+      {/* Footer */}
+      <footer className="py-4 text-center text-xs text-slate-500 border-t border-white/5 bg-slate-900/50">
+        <div className="flex items-center justify-center gap-6">
+          <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">
+            Privacy Policy
+          </a>
+          <a href="/terms-of-service.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">
+            Terms of Service
+          </a>
+        </div>
+      </footer>
+
       <ConfigModal
         isOpen={showConfig}
         onClose={() => setShowConfig(false)}
