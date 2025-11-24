@@ -137,6 +137,17 @@ export default function Recorder({ onRecordingComplete }: { onRecordingComplete:
                 ctx.strokeStyle = "#6366f1";
                 ctx.stroke();
             };
+            worker.onmessage = () => {
+                draw();
+            };
+
+            worker.postMessage('start');
+            workerRef.current = worker;
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = previewStream;
+                videoRef.current.play();
+            }
             if (cameraRef.current) {
                 cameraRef.current.srcObject = previewCameraStream;
                 cameraRef.current.play();
