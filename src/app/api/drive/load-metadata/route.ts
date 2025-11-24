@@ -60,8 +60,20 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ metadata });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Load metadata error:", error);
+
+        // Handle specific Google API errors
+        if (error.code === 401 || (error.errors && error.errors[0]?.reason === 'authError')) {
+            return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+        }
+        if (error.code === 403) {
+            return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+        if (error.code === 404) {
+            return NextResponse.json({ error: "File not found" }, { status: 404 });
+        }
+
         return NextResponse.json({ error: "Failed to load metadata" }, { status: 500 });
     }
 }

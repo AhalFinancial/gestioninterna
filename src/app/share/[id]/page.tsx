@@ -33,7 +33,7 @@ export default function SharedVideoPage() {
                     const data = await res.json();
                     setVideo({
                         id: id,
-                        title: data.metadata?.title || "Shared Video", 
+                        title: data.metadata?.title || "Shared Video",
                         src: `/api/drive/fetch-video?fileId=${id}`,
                         duration: data.metadata?.duration || "0:00",
                         date: data.metadata?.createdAt ? new Date(data.metadata.createdAt).toLocaleDateString() : "",
@@ -43,21 +43,19 @@ export default function SharedVideoPage() {
                     // Explicitly handle 401 Unauthorized
                     console.log("Not authenticated (401)");
                     setIsAuthenticated(false);
+                } else if (res.status === 403) {
+                    console.log("Access denied (403)");
+                    setIsAuthenticated(true); // User is authenticated but lacks permission
+                    setError("Access denied. You don't have permission to view this video.");
+                } else if (res.status === 404) {
+                    console.log("Video not found (404)");
+                    setIsAuthenticated(true);
+                    setError("Video not found.");
                 } else {
-                     // Other errors (404, 500, etc.)
-                     // If we can't load metadata but it's not 401, maybe it's a public file or just metadata missing?
-                     // But our API requires auth for everything.
-                     // Let's assume if it's not OK, we treat it as auth failure or error.
-                     console.warn("Metadata load failed with status:", res.status);
-                     
-                     // If 500 or 400, it might be authenticated but failed.
-                     // But safer to assume 401-like behavior or show error?
-                     // If we assume false, they get login screen.
-                     // If we assume true, they get broken page.
-                     
-                     // Let's retry check with a simpler auth check?
-                     // No, let's treat non-200 as failed auth/access for now.
-                     setIsAuthenticated(false);
+                    console.warn("Metadata load failed with status:", res.status);
+                    // For other errors, assume authenticated but failed to load
+                    setIsAuthenticated(true);
+                    setError("Failed to load video. Please try again later.");
                 }
             } catch (err) {
                 console.error("Auth check failed", err);
@@ -77,7 +75,7 @@ export default function SharedVideoPage() {
         try {
             // Redirect to Google Auth
             const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-            
+
             if (!clientId) {
                 console.error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set!");
                 alert("Google OAuth is not configured.");
@@ -87,17 +85,17 @@ export default function SharedVideoPage() {
             // Use current location origin
             let redirectUri = window.location.origin;
             redirectUri = redirectUri.replace(/\/$/, '');
-            
+
             // Use 'drive' scope
             const scope = "https://www.googleapis.com/auth/drive";
-            
+
             // Redirect to main page with state to return here after login?
             // Actually, the main page handles the auth code exchange. 
             // If we redirect to Google with redirect_uri = origin, it will come back to origin/?code=...
             // The main page (page.tsx) handles the code exchange.
             // After code exchange, it reloads the page (/).
             // So we lose the deep link context unless we persist it.
-            
+
             // For now, let's just redirect the user to login at the root, 
             // and they might have to navigate back or we can try to be smarter.
             // A simple improvement: store the intended return URL in localStorage before redirecting.
@@ -105,7 +103,7 @@ export default function SharedVideoPage() {
             localStorage.setItem("ahal_return_url", window.location.pathname);
 
             const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-            
+
             window.location.href = url;
         } catch (error: any) {
             console.error("Login error:", error);
@@ -151,10 +149,18 @@ export default function SharedVideoPage() {
         );
     }
 
+    if (error) {
+        return (
+            <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+                <div className="text-red-400 text-lg font-medium">{error}</div>
+            </div>
+        );
+    }
+
     if (!video) {
         return (
             <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
-                <div className="text-red-400">Video not found or access denied.</div>
+                <div className="text-red-400">Video not found.</div>
             </div>
         );
     }
@@ -169,7 +175,7 @@ export default function SharedVideoPage() {
                     </div>
                 </div>
                 <div>
-                     {/* Maybe show user avatar? Keeping it simple. */}
+                    {/* Maybe show user avatar? Keeping it simple. */}
                 </div>
             </nav>
 
@@ -210,7 +216,7 @@ export default function SharedVideoPage() {
 
                     {/* Sidebar / Transcript */}
                     <div className="lg:h-[calc(100vh-8rem)] sticky top-6">
-                         <Transcript
+                        <Transcript
                             videoId={video.id}
                             autoGenerate={false}
                         />
