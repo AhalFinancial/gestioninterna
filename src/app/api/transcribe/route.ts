@@ -46,7 +46,7 @@ Generate a timestamped transcript as a JSON array with objects containing:
 Be very accurate with the transcription. Listen carefully to what is actually being said.
 Return ONLY the JSON array, no additional text or markdown.`;
 
-        const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+        const models = ["gemini-2.5-flash", "gemini-1.5-flash-001"];
         let lastError;
 
         for (const modelName of models) {
