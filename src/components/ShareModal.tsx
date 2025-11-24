@@ -1,17 +1,54 @@
 "use client";
 
 import React, { useState } from "react";
-import { Share2, Copy, Check, X } from "lucide-react";
+import { Share2, Copy, Check, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface ShareModalProps {
     isOpen: boolean;
     onClose: () => void;
     videoUrl: string;
     videoTitle: string;
+    videoId: string;
 }
 
-export default function ShareModal({ isOpen, onClose, videoUrl, videoTitle }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, videoUrl, videoTitle, videoId }: ShareModalProps) {
     const [copied, setCopied] = useState(false);
+    const [isSharing, setIsSharing] = useState(false);
+    const [shareError, setShareError] = useState<string | null>(null);
+    const [shareSuccess, setShareSuccess] = useState(false);
+
+    // Auto-share when modal opens
+    React.useEffect(() => {
+        if (isOpen && videoId) {
+            handleShare();
+        }
+    }, [isOpen, videoId]);
+
+    const handleShare = async () => {
+        setIsSharing(true);
+        setShareError(null);
+        try {
+            const res = await fetch("/api/drive/share", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fileId: videoId }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setShareSuccess(true);
+                console.log(data.message);
+            } else {
+                setShareError(data.error || "Failed to share video");
+            }
+        } catch (error) {
+            console.error("Share error:", error);
+            setShareError("Failed to share video. Please try again.");
+        } finally {
+            setIsSharing(false);
+        }
+    };
 
     const handleCopy = () => {
         navigator.clipboard.writeText(videoUrl);
@@ -35,6 +72,27 @@ export default function ShareModal({ isOpen, onClose, videoUrl, videoTitle }: Sh
                 </div>
 
                 <div className="mb-6">
+                    {isSharing && (
+                        <div className="flex items-center gap-2 text-indigo-400 text-sm mb-4 bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                            <Loader2 size={16} className="animate-spin" />
+                            <span>Enabling public access...</span>
+                        </div>
+                    )}
+
+                    {shareSuccess && (
+                        <div className="flex items-center gap-2 text-green-400 text-sm mb-4 bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                            <CheckCircle2 size={16} />
+                            <span>Video is now publicly accessible!</span>
+                        </div>
+                    )}
+
+                    {shareError && (
+                        <div className="flex items-center gap-2 text-red-400 text-sm mb-4 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                            <AlertCircle size={16} />
+                            <span>{shareError}</span>
+                        </div>
+                    )}
+
                     <p className="text-slate-400 text-sm mb-4">
                         Share this video with your team. Anyone with the link can view it.
                     </p>

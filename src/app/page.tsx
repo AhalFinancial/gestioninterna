@@ -116,11 +116,11 @@ function HomeContent() {
         hasWindow: typeof window !== 'undefined',
         origin: typeof window !== 'undefined' ? window.location.origin : 'N/A',
       });
-      
+
       // Redirect to Google Auth
       const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
       console.log("Client ID check:", clientId ? "Set" : "NOT SET");
-      
+
       if (!clientId) {
         console.error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set!");
         alert("Google OAuth is not configured. Please check environment variables.\n\nCheck Vercel → Settings → Environment Variables → NEXT_PUBLIC_GOOGLE_CLIENT_ID");
@@ -130,21 +130,21 @@ function HomeContent() {
       // Get redirect URI and remove trailing slash if present
       let redirectUri = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : "http://localhost:3000");
       redirectUri = redirectUri.replace(/\/$/, ''); // Remove trailing slash
-      
+
       console.log("Redirect URI:", redirectUri);
-      
+
       // Use 'drive' scope to allow access to all files/folders, including the shared Team Folder
       // and the user's root folder. 'drive.file' only allows access to files created by the app.
       const scope = "https://www.googleapis.com/auth/drive";
       // The redirect URI should be the page itself where we handle the code, not the API route
       // Google redirects here -> We get code -> We POST code + redirectUri to API
       const finalRedirectUri = redirectUri;
-      
+
       const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(finalRedirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-      
+
       console.log("Full OAuth URL:", url);
       console.log("Redirecting to Google OAuth...");
-      
+
       window.location.href = url;
     } catch (error: any) {
       console.error("Login error:", error);
@@ -586,6 +586,7 @@ function HomeContent() {
           return `${baseUrl}/share/${selectedVideo.id}`;
         })()}
         videoTitle={selectedVideo?.title || ""}
+        videoId={selectedVideo?.id || ""}
       />
     </div>
   );
