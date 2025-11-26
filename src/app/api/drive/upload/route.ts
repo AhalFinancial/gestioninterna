@@ -56,4 +56,93 @@ export async function POST(req: Request) {
 
         const uploadPromise = new Promise<any>((resolve, reject) => {
             busboy.on("field", (name, value) => {
-            }
+                fields[name] = value;
+            });
+
+            busboy.on("file", async (name, file, info) => {
+                fileMimeType = info.mimeType;
+                fileName = info.filename;
+
+                const title = fields.title || fileName;
+                const folderId = fields.folderId;
+
+                const fileMetadata = {
+                    name: title ? `${title}.${fileName.split('.').pop()}` : fileName,
+                    mimeType: fileMimeType,
+                    parents: folderId ? [folderId] : [],
+                };
+
+                try {
+                    // 1. Initiate Resumable Upload Session
+                    const initiateResponse = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${tokens.access_token}`,
+                            "Content-Type": "application/json",
+                            "X-Upload-Content-Type": fileMimeType,
+                        },
+                        body: JSON.stringify(fileMetadata),
+                    });
+
+                    if (!initiateResponse.ok) {
+                        throw new Error(`Failed to initiate upload: ${initiateResponse.statusText}`);
+                    }
+
+                    const uploadUrl = initiateResponse.headers.get("Location");
+                    if (!uploadUrl) {
+                        throw new Error("No upload location header received");
+                    }
+
+                    // 2. Stream file content to the upload URL
+                    // Convert Node stream to Web stream for fetch
+                    // @ts-ignore
+                    const webStream = Readable.toWeb(file);
+
+                    const uploadResponse = await fetch(uploadUrl, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": fileMimeType,
+                        },
+                        // @ts-ignore
+                        body: webStream,
+                        duplex: 'half'
+                    });
+
+                    if (!uploadResponse.ok) {
+                        const errorText = await uploadResponse.text();
+                        throw new Error(`Upload failed: ${uploadResponse.status} ${errorText}`);
+                    }
+
+                    const result = await uploadResponse.json();
+                    resolve(result);
+
+                } catch (err) {
+                    reject(err);
+                }
+            });
+
+            busboy.on("error", (err) => {
+                reject(err);
+            });
+
+            busboy.on("finish", () => {
+                // Wait for file processing
+            });
+        });
+
+        // Convert Web Stream to Node Stream and pipe to busboy
+        // @ts-ignore
+        const nodeStream = Readable.fromWeb(req.body);
+        nodeStream.pipe(busboy);
+
+        const fileData = await uploadPromise;
+
+        return NextResponse.json({ file: fileData });
+
+    } catch (error: any) {
+        console.error("Upload error details:", error);
+        const errorMessage = error.message || "Upload failed";
+        const status = error.code || 500;
+        return NextResponse.json({ error: errorMessage }, { status: status >= 100 && status < 600 ? status : 500 });
+    }
+}
