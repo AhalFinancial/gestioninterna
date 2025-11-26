@@ -54,28 +54,31 @@ export async function POST(req: Request) {
 
             // Search for metadata file in the same previous parent folder
             const parentId = previousParents.split(',')[0]; // Assuming single parent for simplicity
-            const escapedFileName = metadataFileName.replace(/'/g, "\\'");
-            const metaQuery = `name='${escapedFileName}' and '${parentId}' in parents and trashed=false`;
 
-            const metaFiles = await drive.files.list({
-                q: metaQuery,
-                fields: "files(id, parents)",
-                supportsAllDrives: true,
-                includeItemsFromAllDrives: true,
-            });
+            if (parentId) {
+                const escapedFileName = metadataFileName.replace(/'/g, "\\'");
+                const metaQuery = `name='${escapedFileName}' and '${parentId}' in parents and trashed=false`;
 
-            if (metaFiles.data.files && metaFiles.data.files.length > 0) {
-                const metaFile = metaFiles.data.files[0];
-                const metaPreviousParents = metaFile.parents?.join(',') || '';
-
-                await drive.files.update({
-                    fileId: metaFile.id!,
-                    addParents: newParentId,
-                    removeParents: metaPreviousParents,
-                    fields: "id, parents",
+                const metaFiles = await drive.files.list({
+                    q: metaQuery,
+                    fields: "files(id, parents)",
                     supportsAllDrives: true,
+                    includeItemsFromAllDrives: true,
                 });
-                console.log("Moved associated metadata file:", metaFile.id);
+
+                if (metaFiles.data.files && metaFiles.data.files.length > 0) {
+                    const metaFile = metaFiles.data.files[0];
+                    const metaPreviousParents = metaFile.parents?.join(',') || '';
+
+                    await drive.files.update({
+                        fileId: metaFile.id!,
+                        addParents: newParentId,
+                        removeParents: metaPreviousParents,
+                        fields: "id, parents",
+                        supportsAllDrives: true,
+                    });
+                    console.log("Moved associated metadata file:", metaFile.id);
+                }
             }
         } catch (metaError) {
             console.error("Error moving metadata file (non-fatal):", metaError);

@@ -63,7 +63,7 @@ export default function ShareModal({ isOpen, onClose, videoUrl, videoTitle, vide
             <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl animate-fade-in">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <Share2 className="text-indigo-400" size={24} />
+                        <Share2 className="text-blue-400" size={24} />
                         Share Video
                     </h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-white transition">
@@ -73,7 +73,7 @@ export default function ShareModal({ isOpen, onClose, videoUrl, videoTitle, vide
 
                 <div className="mb-6">
                     {isSharing && (
-                        <div className="flex items-center gap-2 text-indigo-400 text-sm mb-4 bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                        <div className="flex items-center gap-2 text-blue-400 text-sm mb-4 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                             <Loader2 size={16} className="animate-spin" />
                             <span>Enabling public access...</span>
                         </div>

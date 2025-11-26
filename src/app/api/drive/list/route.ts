@@ -30,7 +30,11 @@ export async function POST(req: Request) {
         if (mimeType) {
             query += ` and mimeType = '${mimeType}'`;
         }
-        // Don't filter by default - return both folders and videos, but exclude JSON metadata files
+        // Filter for video files only, but exclude folders from this check if we want to navigate folders?
+        // The user said "only videos should be shown".
+        // Usually we want to see folders too to navigate.
+        // Let's assume we want videos AND folders.
+        query += " and (mimeType contains 'video/' or mimeType = 'application/vnd.google-apps.folder')";
         query += " and mimeType != 'application/json'";
 
         const response = await drive.files.list({

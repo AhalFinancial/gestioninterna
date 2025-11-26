@@ -135,7 +135,7 @@ export default function VideoPlayer({ src }: VideoPlayerProps) {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <button
                         onClick={togglePlay}
-                        className="w-20 h-20 bg-indigo-500 hover:bg-indigo-600 rounded-full flex items-center justify-center transition shadow-2xl pointer-events-auto"
+                        className="w-20 h-20 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center transition shadow-2xl pointer-events-auto"
                     >
                         <Play size={32} fill="white" className="text-white ml-1" />
                     </button>
@@ -156,36 +156,36 @@ export default function VideoPlayer({ src }: VideoPlayerProps) {
                 [&::-webkit-slider-thumb]:w-3
                 [&::-webkit-slider-thumb]:h-3
                 [&::-webkit-slider-thumb]:rounded-full
-                [&::-webkit-slider-thumb]:bg-indigo-500
+                [&::-webkit-slider-thumb]:bg-blue-500
                 [&::-webkit-slider-thumb]:cursor-pointer
                 hover:[&::-webkit-slider-thumb]:scale-125
                 [&::-moz-range-thumb]:w-3
                 [&::-moz-range-thumb]:h-3
                 [&::-moz-range-thumb]:rounded-full
-                [&::-moz-range-thumb]:bg-indigo-500
+                [&::-moz-range-thumb]:bg-blue-500
                 [&::-moz-range-thumb]:border-0"
                             style={{
-                                background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${progressPercent}%, rgba(255,255,255,0.3) ${progressPercent}%, rgba(255,255,255,0.3) 100%)`
+                                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${progressPercent}%, rgba(255,255,255,0.3) ${progressPercent}%, rgba(255,255,255,0.3) 100%)`
                             }}
                         />
                     </div>
 
                     <div className="flex items-center justify-between text-white">
                         <div className="flex items-center gap-3">
-                            <button onClick={togglePlay} className="hover:text-indigo-400 transition">
+                            <button onClick={togglePlay} className="hover:text-blue-400 transition">
                                 {isPlaying ? <Pause size={20} /> : <Play size={20} />}
                             </button>
 
-                            <button onClick={() => skip(-10)} className="hover:text-indigo-400 transition">
+                            <button onClick={() => skip(-10)} className="hover:text-blue-400 transition">
                                 <SkipBack size={18} />
                             </button>
 
-                            <button onClick={() => skip(10)} className="hover:text-indigo-400 transition">
+                            <button onClick={() => skip(10)} className="hover:text-blue-400 transition">
                                 <SkipForward size={18} />
                             </button>
 
                             <div className="flex items-center gap-2 group/volume">
-                                <button onClick={toggleMute} className="hover:text-indigo-400 transition">
+                                <button onClick={toggleMute} className="hover:text-blue-400 transition">
                                     {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
                                 </button>
                                 <input
@@ -228,8 +228,7 @@ export default function VideoPlayer({ src }: VideoPlayerProps) {
                                             <button
                                                 key={speed}
                                                 onClick={() => changeSpeed(speed)}
-                                                className={`w-full text-left px-3 py-1.5 rounded text-sm transition ${playbackRate === speed ? "bg-indigo-500 text-white" : "text-slate-300 hover:bg-white/10"
-                                                    }`}
+                                                className={`w-full text-left px-3 py-1.5 rounded text-sm transition ${playbackRate === speed ? "bg-blue-500 text-white" : "text-slate-300 hover:bg-white/10"}`}
                                             >
                                                 {speed}x
                                             </button>
@@ -238,7 +237,7 @@ export default function VideoPlayer({ src }: VideoPlayerProps) {
                                 )}
                             </div>
 
-                            <button onClick={toggleFullscreen} className="hover:text-indigo-400 transition">
+                            <button onClick={toggleFullscreen} className="hover:text-blue-400 transition">
                                 <Maximize size={20} />
                             </button>
                         </div>

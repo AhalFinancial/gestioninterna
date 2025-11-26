@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [];
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '500mb',
+    },
+  },
 };
 
 export default nextConfig;

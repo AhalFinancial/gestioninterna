@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { Readable } from "stream";
 
+export const maxDuration = 300; // 5 minutes
+
 export async function POST(req: Request) {
     try {
         const cookieStore = await cookies();

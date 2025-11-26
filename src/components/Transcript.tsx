@@ -161,7 +161,7 @@ export default function Transcript({ videoId, videoBlob, autoGenerate }: { video
             <div className="p-6 border-b border-white/5">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Sparkles size={18} className="text-indigo-400" />
+                        <Sparkles size={18} className="text-blue-400" />
                         Transcript
                     </h2>
                     {transcript.length > 0 && (
@@ -182,7 +182,7 @@ export default function Transcript({ videoId, videoBlob, autoGenerate }: { video
                         <select
                             value={language}
                             onChange={(e) => setLanguage(e.target.value as "auto" | "es" | "en")}
-                            className="flex-1 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                            className="flex-1 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
                         >
                             <option value="auto">Auto-detect</option>
                             <option value="es">Spanish</option>
@@ -198,7 +198,7 @@ export default function Transcript({ videoId, videoBlob, autoGenerate }: { video
                 ) : transcript.length > 0 ? (
                     transcript.map((segment, index) => (
                         <div key={index} className="group flex gap-4 hover:bg-white/5 p-2 rounded-lg transition -mx-2">
-                            <span className="text-indigo-400 font-mono text-xs pt-1 select-none cursor-pointer hover:underline">
+                            <span className="text-blue-400 font-mono text-xs pt-1 select-none cursor-pointer hover:underline">
                                 {segment.time}
                             </span>
                             <div className="flex-1">
@@ -215,8 +215,8 @@ export default function Transcript({ videoId, videoBlob, autoGenerate }: { video
                     ))
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                        <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center mb-4">
-                            <Sparkles size={24} className="text-indigo-500" />
+                        <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mb-4">
+                            <Sparkles size={24} className="text-blue-500" />
                         </div>
                         <h3 className="text-white font-medium mb-2">No Transcript Yet</h3>
                         <p className="text-slate-400 text-sm mb-6">

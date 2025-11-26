@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Folder, Video, Clock, Search, Grid, List, ChevronRight, Plus, Sparkles } from "lucide-react";
+import { Folder, Video, Clock, Search, Grid, List, ChevronRight, Plus, Sparkles, UploadCloud } from "lucide-react";
 import VideoMenu from "./VideoMenu";
 import MoveModal from "./MoveModal";
+import UploadModal from "./UploadModal";
 
 interface VideoItem {
     id: string;
@@ -44,7 +45,9 @@ export default function VideoLibrary({
     const [videos, setVideos] = useState<VideoItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [showMoveModal, setShowMoveModal] = useState(false);
+    const [showUploadModal, setShowUploadModal] = useState(false);
     const [selectedVideoForMove, setSelectedVideoForMove] = useState<VideoItem | null>(null);
+    const [draggedVideoId, setDraggedVideoId] = useState<string | null>(null);
 
     useEffect(() => {
         if (activeSection === "my-videos") {
@@ -235,12 +238,45 @@ export default function VideoLibrary({
         }
     };
 
+    const handleDragStart = (e: React.DragEvent, videoId: string) => {
+        e.dataTransfer.setData("videoId", videoId);
+        setDraggedVideoId(videoId);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault(); // Allow drop
+    };
+
+    const handleDropOnFolder = async (e: React.DragEvent, targetFolderId: string) => {
+        e.preventDefault();
+        const videoId = e.dataTransfer.getData("videoId");
+        if (!videoId) return;
+
+        // Optimistic update or just loading state could be good here
+        try {
+            await fetch("/api/drive/move", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    fileId: videoId,
+                    newParentId: targetFolderId,
+                    oldParentId: currentFolderId
+                }),
+            });
+            fetchVideos(currentFolderId); // Refresh to show moved item is gone
+            setDraggedVideoId(null);
+        } catch (err) {
+            console.error("Drag move failed", err);
+            alert("Failed to move video");
+        }
+    };
+
     return (
         <>
             <div className="flex h-full min-h-[600px] bg-slate-900/50 rounded-3xl border border-white/5 overflow-hidden">
                 <aside className="w-64 bg-slate-900/80 border-r border-white/5 p-6 flex flex-col gap-6 hidden md:flex">
-                    <div className="flex items-center gap-2 text-indigo-400 font-bold text-xl mb-4">
-                        <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white">
+                    <div className="flex items-center gap-2 text-blue-400 font-bold text-xl mb-4">
+                        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white">
                             <Video size={18} />
                         </div>
                         Ahal Clips
@@ -271,13 +307,13 @@ export default function VideoLibrary({
                 <main className="flex-1 flex flex-col">
                     <header className="h-20 border-b border-white/5 flex items-center justify-between px-8">
                         <div className="flex items-center gap-2 text-white font-medium overflow-hidden">
-                            <button onClick={() => handleBreadcrumbClick(-1)} className="hover:text-indigo-400 transition">
+                            <button onClick={() => handleBreadcrumbClick(-1)} className="hover:text-blue-400 transition">
                                 {activeSection === "team" ? "Team Library" : "My Videos"}
                             </button>
                             {folderHistory.map((folder, index) => (
                                 <React.Fragment key={folder.id}>
                                     <ChevronRight size={16} className="text-slate-500" />
-                                    <button onClick={() => handleBreadcrumbClick(index)} className="hover:text-indigo-400 transition truncate max-w-[150px]">
+                                    <button onClick={() => handleBreadcrumbClick(index)} className="hover:text-blue-400 transition truncate max-w-[150px]">
                                         {folder.name}
                                     </button>
                                 </React.Fragment>
@@ -289,24 +325,28 @@ export default function VideoLibrary({
                                 <Plus size={16} />
                                 New Folder
                             </button>
+                            <button onClick={() => setShowUploadModal(true)} className="btn btn-primary text-sm">
+                                <UploadCloud size={16} />
+                                Upload Video
+                            </button>
                             <div className="relative">
                                 <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
                                     type="text"
                                     placeholder="Search..."
-                                    className="bg-slate-800/50 border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 w-64 transition"
+                                    className="bg-slate-800/50 border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 w-64 transition"
                                 />
                             </div>
                             <div className="flex bg-slate-800/50 rounded-lg p-1 border border-white/10">
                                 <button
                                     onClick={() => setViewMode("grid")}
-                                    className={`p-2 rounded-md transition ${viewMode === "grid" ? "bg-indigo-500 text-white" : "text-slate-400 hover:text-white"}`}
+                                    className={`p-2 rounded-md transition ${viewMode === "grid" ? "bg-blue-500 text-white" : "text-slate-400 hover:text-white"}`}
                                 >
                                     <Grid size={18} />
                                 </button>
                                 <button
                                     onClick={() => setViewMode("list")}
-                                    className={`p-2 rounded-md transition ${viewMode === "list" ? "bg-indigo-500 text-white" : "text-slate-400 hover:text-white"}`}
+                                    className={`p-2 rounded-md transition ${viewMode === "list" ? "bg-blue-500 text-white" : "text-slate-400 hover:text-white"}`}
                                 >
                                     <List size={18} />
                                 </button>
@@ -323,7 +363,13 @@ export default function VideoLibrary({
                             <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"}`}>
                                 {videos.map((video, index) => (
                                     video.mimeType === "application/vnd.google-apps.folder" ? (
-                                        <FolderCard key={`${video.id}-${index}`} folder={video} onClick={() => handleFolderClick(video)} />
+                                        <FolderCard
+                                            key={`${video.id}-${index}`}
+                                            folder={video}
+                                            onClick={() => handleFolderClick(video)}
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleDropOnFolder(e, video.id)}
+                                        />
                                     ) : (
                                         <VideoCard
                                             key={`${video.id}-${index}`}
@@ -334,6 +380,8 @@ export default function VideoLibrary({
                                             onDelete={() => handleDelete(video)}
                                             onShare={() => handleShare(video)}
                                             onMove={() => handleMoveClick(video)}
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, video.id)}
                                         />
                                     )
                                 ))}
@@ -349,56 +397,80 @@ export default function VideoLibrary({
                 onMove={handleMoveComplete}
                 videoTitle={selectedVideoForMove?.title || ""}
             />
+
+            <UploadModal
+                isOpen={showUploadModal}
+                onClose={() => setShowUploadModal(false)}
+                onUploadComplete={() => fetchVideos(currentFolderId)}
+                currentFolderId={currentFolderId || (activeSection === "team" ? TEAM_FOLDER_ID : rootFolderId || "")}
+            />
         </>
     );
 }
 
 function NavItem({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick?: () => void }) {
     return (
-        <button onClick={onClick} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition ${active ? "bg-indigo-500/10 text-indigo-400" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}>
+        <button onClick={onClick} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition ${active ? "bg-blue-500/10 text-blue-400" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}>
             {icon}
             {label}
         </button>
     );
 }
 
-function FolderCard({ folder, onClick }: { folder: VideoItem, onClick: () => void }) {
+function FolderCard({ folder, onClick, onDragOver, onDrop }: {
+    folder: VideoItem,
+    onClick: () => void,
+    onDragOver: (e: React.DragEvent) => void,
+    onDrop: (e: React.DragEvent) => void
+}) {
     return (
-        <div onClick={onClick} className="group flex flex-col gap-3 cursor-pointer">
-            <div className="aspect-[4/3] bg-slate-800/50 rounded-xl border border-white/5 group-hover:border-indigo-500/50 transition flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition duration-500" />
-                <Folder size={48} className="text-indigo-400 group-hover:scale-110 transition duration-300" />
+        <div
+            onClick={onClick}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+            className="group flex flex-col gap-3 cursor-pointer"
+        >
+            <div className="aspect-[4/3] bg-slate-800/50 rounded-xl border border-white/5 group-hover:border-blue-500/50 transition flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition duration-500" />
+                <Folder size={48} className="text-blue-400 group-hover:scale-110 transition duration-300" />
             </div>
-            <h3 className="text-white font-medium text-center group-hover:text-indigo-400 transition">{folder.title}</h3>
+            <h3 className="text-white font-medium text-center group-hover:text-blue-400 transition">{folder.title}</h3>
         </div>
     );
 }
 
-function VideoCard({ video, onClick, viewMode, onRename, onDelete, onShare, onMove }: {
+function VideoCard({ video, onClick, viewMode, onRename, onDelete, onShare, onMove, draggable, onDragStart }: {
     video: VideoItem,
     onClick: () => void,
     viewMode: "grid" | "list",
     onRename: () => void,
     onDelete: () => void,
     onShare: () => void,
-    onMove: () => void
+    onMove: () => void,
+    draggable?: boolean,
+    onDragStart?: (e: React.DragEvent) => void
 }) {
     if (viewMode === "list") {
         return (
-            <div onClick={onClick} className="group flex items-center gap-4 p-4 rounded-xl bg-slate-800/30 border border-white/5 hover:border-indigo-500/50 hover:bg-slate-800/50 transition cursor-pointer">
+            <div
+                onClick={onClick}
+                draggable={draggable}
+                onDragStart={onDragStart}
+                className="group flex items-center gap-4 p-4 rounded-xl bg-slate-800/30 border border-white/5 hover:border-blue-500/50 hover:bg-slate-800/50 transition cursor-pointer active:cursor-grabbing"
+            >
                 <div className="w-40 aspect-video bg-slate-900 rounded-lg relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded font-mono">
                         {video.duration}
                     </div>
                     {video.hasTranscript && (
-                        <div className="absolute top-2 right-2 bg-indigo-500/90 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1" title="Has transcript">
+                        <div className="absolute top-2 right-2 bg-blue-500/90 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1" title="Has transcript">
                             <Sparkles size={10} />
                         </div>
                     )}
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-white font-medium mb-1 group-hover:text-indigo-400 transition">{video.title}</h3>
+                    <h3 className="text-white font-medium mb-1 group-hover:text-blue-400 transition">{video.title}</h3>
                     <div className="text-slate-400 text-sm flex items-center gap-3">
                         <span>{video.date}</span>
                         <span>•</span>
@@ -411,21 +483,26 @@ function VideoCard({ video, onClick, viewMode, onRename, onDelete, onShare, onMo
     }
 
     return (
-        <div onClick={onClick} className="group flex flex-col gap-3 cursor-pointer relative">
+        <div
+            onClick={onClick}
+            draggable={draggable}
+            onDragStart={onDragStart}
+            className="group flex flex-col gap-3 cursor-pointer relative active:cursor-grabbing"
+        >
             <div className="aspect-video bg-slate-900 rounded-xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded font-mono">
                     {video.duration}
                 </div>
                 {video.hasTranscript && (
-                    <div className="absolute top-2 right-2 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded flex items-center gap-1" title="Has transcript">
+                    <div className="absolute top-2 right-2 bg-blue-500/90 text-white text-xs px-2 py-1 rounded flex items-center gap-1" title="Has transcript">
                         <Sparkles size={12} />
                     </div>
                 )}
             </div>
             <div className="flex items-start justify-between">
                 <div>
-                    <h3 className="text-white font-medium leading-tight mb-1 group-hover:text-indigo-400 transition line-clamp-2">{video.title}</h3>
+                    <h3 className="text-white font-medium leading-tight mb-1 group-hover:text-blue-400 transition line-clamp-2">{video.title}</h3>
                     <div className="text-slate-500 text-xs">{video.date}</div>
                 </div>
                 <VideoMenu onRename={onRename} onDelete={onDelete} onShare={onShare} onMove={onMove} />

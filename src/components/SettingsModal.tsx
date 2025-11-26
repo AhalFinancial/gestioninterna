@@ -34,7 +34,7 @@ export default function SettingsModal({ isOpen, onClose, onLogout, onChangeFolde
             <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <SettingsIcon className="text-indigo-400" size={28} />
+                        <SettingsIcon className="text-blue-400" size={28} />
                         {t("settings.title")}
                     </h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-white transition">
@@ -46,15 +46,15 @@ export default function SettingsModal({ isOpen, onClose, onLogout, onChangeFolde
                     {/* Language */}
                     <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5">
                         <div className="flex items-center gap-3 mb-3">
-                            <Globe size={20} className="text-indigo-400" />
+                            <Globe size={20} className="text-blue-400" />
                             <h3 className="text-white font-semibold">{t("settings.language")}</h3>
                         </div>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setLanguage("en")}
                                 className={`flex-1 py-3 px-4 rounded-lg border transition ${language === "en"
-                                        ? "bg-indigo-500 border-indigo-500 text-white"
-                                        : "bg-slate-700/50 border-white/10 text-slate-300 hover:bg-slate-700"
+                                    ? "bg-blue-500 border-blue-500 text-white"
+                                    : "bg-slate-700/50 border-white/10 text-slate-300 hover:bg-slate-700"
                                     }`}
                             >
                                 🇺🇸 English
@@ -62,8 +62,8 @@ export default function SettingsModal({ isOpen, onClose, onLogout, onChangeFolde
                             <button
                                 onClick={() => setLanguage("es")}
                                 className={`flex-1 py-3 px-4 rounded-lg border transition ${language === "es"
-                                        ? "bg-indigo-500 border-indigo-500 text-white"
-                                        : "bg-slate-700/50 border-white/10 text-slate-300 hover:bg-slate-700"
+                                    ? "bg-blue-500 border-blue-500 text-white"
+                                    : "bg-slate-700/50 border-white/10 text-slate-300 hover:bg-slate-700"
                                     }`}
                             >
                                 🇪🇸 Español
@@ -74,7 +74,7 @@ export default function SettingsModal({ isOpen, onClose, onLogout, onChangeFolde
                     {/* Drive Connection */}
                     <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5">
                         <div className="flex items-center gap-3 mb-3">
-                            <RefreshCw size={20} className="text-indigo-400" />
+                            <RefreshCw size={20} className="text-blue-400" />
                             <h3 className="text-white font-semibold">{t("settings.driveConnection")}</h3>
                         </div>
                         <p className="text-slate-400 text-sm mb-3">
@@ -91,14 +91,14 @@ export default function SettingsModal({ isOpen, onClose, onLogout, onChangeFolde
                     {/* My Videos Folder */}
                     <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5">
                         <div className="flex items-center gap-3 mb-3">
-                            <FolderOpen size={20} className="text-indigo-400" />
+                            <FolderOpen size={20} className="text-blue-400" />
                             <h3 className="text-white font-semibold">{t("settings.myVideosFolder")}</h3>
                         </div>
                         <p className="text-slate-400 text-sm mb-3">
                             {rootFolder ? (
                                 <>
                                     {language === "en" ? "Current folder ID: " : "ID de carpeta actual: "}
-                                    <code className="text-indigo-400">{rootFolder.substring(0, 20)}...</code>
+                                    <code className="text-blue-400">{rootFolder.substring(0, 20)}...</code>
                                 </>
                             ) : (
                                 language === "en" ? "No folder configured" : "Sin carpeta configurada"
@@ -113,7 +113,7 @@ export default function SettingsModal({ isOpen, onClose, onLogout, onChangeFolde
                     {/* Team Library */}
                     <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5">
                         <div className="flex items-center gap-3 mb-3">
-                            <FolderOpen size={20} className="text-indigo-400" />
+                            <FolderOpen size={20} className="text-blue-400" />
                             <h3 className="text-white font-semibold">{t("settings.teamFolder")}</h3>
                         </div>
                         <p className="text-slate-400 text-sm">

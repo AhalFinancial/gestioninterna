@@ -1,43 +1,67 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
 import { NextResponse } from "next/server";
+import { writeFile, unlink } from "fs/promises";
+import path from "path";
+import os from "os";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const fileManager = new GoogleAIFileManager(process.env.GEMINI_API_KEY!);
+
+export const maxDuration = 300; // 5 minutes timeout for the route itself
 
 export async function POST(req: Request) {
+    let tempFilePath = "";
+    let uploadResult = null;
+
     try {
         const formData = await req.formData();
         const file = formData.get("file") as File;
         const language = formData.get("language") as string || "auto";
-        const chunkIndex = formData.get("chunkIndex") as string;
-        const totalChunks = formData.get("totalChunks") as string;
 
         if (!file) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
-        const chunkInfo = chunkIndex ? ` (chunk ${parseInt(chunkIndex) + 1}/${totalChunks})` : "";
-        console.log(`\n📹 Transcribing file: ${file.name}${chunkInfo}`);
+        console.log(`\n📹 Transcribing file: ${file.name}`);
         console.log(`📊 Size: ${(file.size / (1024 * 1024)).toFixed(2)}MB, Type: ${file.type}`);
 
-        // Check file size (Gemini API has ~20MB limit for inline data)
-        const MAX_SIZE = 20 * 1024 * 1024; // 20MB
-        if (file.size > MAX_SIZE) {
-            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-            console.error(`❌ File too large: ${sizeMB}MB (max: 20MB)`);
-            return NextResponse.json({
-                error: "File too large",
-                details: `File size is ${sizeMB}MB. Maximum supported size is 20MB. Please use a shorter video.`
-            }, { status: 400 });
+        // Save file to temporary directory
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const tempDir = os.tmpdir();
+        const fileName = `upload-${Date.now()}-${file.name}`;
+        tempFilePath = path.join(tempDir, fileName);
+
+        await writeFile(tempFilePath, buffer);
+        console.log(`💾 Saved to temp file: ${tempFilePath}`);
+
+        // Upload to Gemini
+        console.log("🚀 Uploading to Gemini File API...");
+        uploadResult = await fileManager.uploadFile(tempFilePath, {
+            mimeType: file.type || "video/webm",
+            displayName: file.name,
+        });
+
+        console.log(`✅ Uploaded to Gemini: ${uploadResult.file.uri}`);
+
+        // Wait for processing to complete
+        let fileState = uploadResult.file.state;
+        console.log(`⏳ Processing state: ${fileState}`);
+
+        while (fileState === FileState.PROCESSING) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            const fileStatus = await fileManager.getFile(uploadResult.file.name);
+            fileState = fileStatus.state;
+            console.log(`⏳ Processing state: ${fileState}`);
         }
 
-        // Convert file to base64
-        console.log("🔄 Converting to base64...");
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const base64 = buffer.toString("base64");
-        console.log(`✅ Base64 size: ${(base64.length / (1024 * 1024)).toFixed(2)}MB`);
+        if (fileState === FileState.FAILED) {
+            throw new Error("Video processing failed on Gemini servers.");
+        }
 
-        const prompt = `Transcribe this ${file.type.startsWith('audio/') ? 'audio' : 'video'} accurately. The audio may be in Spanish or English. 
+        console.log("✅ Video processing complete. Generating transcript...");
+
+        const prompt = `Transcribe this video accurately. The audio may be in Spanish or English. 
 Generate a timestamped transcript as a JSON array with objects containing:
 - "time": timestamp in MM:SS format
 - "text": the spoken text
@@ -46,82 +70,57 @@ Generate a timestamped transcript as a JSON array with objects containing:
 Be very accurate with the transcription. Listen carefully to what is actually being said.
 Return ONLY the JSON array, no additional text or markdown.`;
 
-        const models = ["gemini-2.5-flash", "gemini-1.5-flash-001"];
-        let lastError;
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        for (const modelName of models) {
-            console.log(`\n🤖 Using Gemini model: ${modelName}`);
-            const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent([
+            prompt,
+            {
+                fileData: {
+                    fileUri: uploadResult.file.uri,
+                    mimeType: uploadResult.file.mimeType,
+                },
+            },
+        ]);
 
-            const maxRetries = 2; // Reduced retries per model since we have multiple models
+        const response = await result.response;
+        const text = response.text();
 
-            for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                try {
-                    console.log(`🚀 Sending to Gemini API (${modelName}, Attempt ${attempt}/${maxRetries})...`);
+        console.log("✅ Received response from Gemini");
 
-                    const result = await model.generateContent([
-                        prompt,
-                        {
-                            inlineData: {
-                                data: base64,
-                                mimeType: file.type || (file.name.endsWith('.webm') ? "audio/webm" : "video/webm"),
-                            },
-                        },
-                    ]);
+        // Clean up markdown code blocks if present
+        const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
 
-                    const response = await result.response;
-                    const text = response.text();
-
-                    console.log(`✅ Received response from Gemini (${modelName})`);
-
-                    // Clean up markdown code blocks if present
-                    const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
-
-                    try {
-                        const transcript = JSON.parse(cleanJson);
-                        console.log(`✅ Transcript parsed successfully: ${transcript.length} segments`);
-                        return NextResponse.json({ transcript });
-                    } catch (e) {
-                        console.error(`❌ Failed to parse JSON from ${modelName}:`, text.substring(0, 200));
-                        // If JSON parsing fails, it might be the model's fault, try next model? 
-                        // Or maybe just throw to retry? 
-                        // Let's throw to trigger retry or next model
-                        throw new Error("JSON parse error");
-                    }
-                } catch (error: any) {
-                    lastError = error;
-
-                    console.error(`\n=== ❌ TRANSCRIPTION ERROR (${modelName}, Attempt ${attempt}/${maxRetries}) ===`);
-                    console.error("Error message:", error.message);
-
-                    const is500Error = error.message?.includes("500") || error.message?.includes("Internal");
-
-                    if (is500Error && attempt < maxRetries) {
-                        const waitTime = 1000 * attempt;
-                        console.log(`🔄 500 error detected, retrying in ${waitTime}ms...`);
-                        await new Promise(resolve => setTimeout(resolve, waitTime));
-                        continue;
-                    }
-
-                    // If it's not a 500 error, or we ran out of retries for this model, break inner loop to try next model
-                    break;
-                }
-            }
+        try {
+            const transcript = JSON.parse(cleanJson);
+            console.log(`✅ Transcript parsed successfully: ${transcript.length} segments`);
+            return NextResponse.json({ transcript });
+        } catch (e) {
+            console.error("❌ Failed to parse JSON:", text.substring(0, 200));
+            throw new Error("Failed to parse transcript JSON");
         }
 
-        // If we get here, all models failed
-        if (lastError) throw lastError;
-
-        throw lastError;
-
     } catch (error: any) {
-        console.error("\n=== ❌ FINAL TRANSCRIPTION ERROR ===");
+        console.error("\n=== ❌ TRANSCRIPTION ERROR ===");
         console.error("Error:", error);
-        console.error("=== END ===\n");
 
         return NextResponse.json({
             error: "Failed to transcribe",
             details: error instanceof Error ? error.message : String(error)
         }, { status: 500 });
+
+    } finally {
+        // Cleanup
+        try {
+            if (tempFilePath) {
+                await unlink(tempFilePath).catch(() => { }); // Ignore error if file doesn't exist
+                console.log("🧹 Deleted temp file");
+            }
+            if (uploadResult) {
+                await fileManager.deleteFile(uploadResult.file.name).catch(() => { });
+                console.log("🧹 Deleted remote file from Gemini");
+            }
+        } catch (cleanupError) {
+            console.error("Cleanup error:", cleanupError);
+        }
     }
 }

@@ -134,7 +134,7 @@ export default function Recorder({ onRecordingComplete }: { onRecordingComplete:
                 ctx.beginPath();
                 ctx.arc(x + bubbleSize / 2, y + bubbleSize / 2, bubbleSize / 2, 0, Math.PI * 2);
                 ctx.lineWidth = 5;
-                ctx.strokeStyle = "#6366f1";
+                ctx.strokeStyle = "#3b82f6";
                 ctx.stroke();
             };
             worker.onmessage = () => {
@@ -293,14 +293,14 @@ export default function Recorder({ onRecordingComplete }: { onRecordingComplete:
 
             {!isRecording && !showPreview && !showNameModal && (
                 <div className="glass-panel p-8 rounded-3xl flex flex-col items-center gap-6 animate-fade-in text-center max-w-md">
-                    <div className="w-20 h-20 bg-indigo-500/20 rounded-full flex items-center justify-center mb-2">
-                        <CameraIcon size={40} className="text-indigo-400" />
+                    <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mb-2">
+                        <CameraIcon size={40} className="text-blue-400" />
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-2">Start Recording</h2>
                         <p className="text-slate-400">Select your screen and camera to preview before recording.</p>
                     </div>
-                    <button onClick={requestStreams} className="btn btn-primary text-lg w-full justify-center py-4 shadow-xl shadow-indigo-500/20">
+                    <button onClick={requestStreams} className="btn btn-primary text-lg w-full justify-center py-4 shadow-xl shadow-blue-500/20">
                         <Monitor size={20} />
                         Select Screen & Camera
                     </button>
@@ -315,17 +315,17 @@ export default function Recorder({ onRecordingComplete }: { onRecordingComplete:
 
                         <div className="relative bg-black rounded-xl overflow-hidden mb-6">
                             <video ref={previewVideoRef} autoPlay muted playsInline className="w-full" />
-                            <div className="absolute bottom-4 left-4 w-32 h-32 rounded-full overflow-hidden border-4 border-indigo-500 shadow-2xl">
+                            <div className="absolute bottom-4 left-4 w-32 h-32 rounded-full overflow-hidden border-4 border-blue-500 shadow-2xl">
                                 <video ref={previewCameraRef} autoPlay muted playsInline className="w-full h-full object-cover transform scale-x-[-1]" />
                             </div>
                         </div>
 
                         <div className="bg-slate-800/50 rounded-xl p-4 mb-6">
                             <div className="flex items-center gap-3 text-sm text-slate-300">
-                                <Monitor size={16} className="text-indigo-400" />
+                                <Monitor size={16} className="text-blue-400" />
                                 <span>Screen sharing active</span>
                                 <span className="text-slate-600">•</span>
-                                <CameraIcon size={16} className="text-indigo-400" />
+                                <CameraIcon size={16} className="text-blue-400" />
                                 <span>Camera active</span>
                                 <span className="text-slate-600">•</span>
                                 <span>🎤 Microphone active</span>
@@ -349,7 +349,7 @@ export default function Recorder({ onRecordingComplete }: { onRecordingComplete:
             {/* Floating Control Bar */}
             {isRecording && (
                 <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-xl border border-white/10 p-2 rounded-full flex items-center gap-2 shadow-2xl z-50 animate-slide-up">
-                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-500 mx-2">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-500 mx-2">
                         <VideoPreview stream={cameraStream} />
                     </div>
 
@@ -384,7 +384,7 @@ export default function Recorder({ onRecordingComplete }: { onRecordingComplete:
                             type="text"
                             value={videoTitle}
                             onChange={(e) => setVideoTitle(e.target.value)}
-                            className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition mb-6"
+                            className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition mb-6"
                             placeholder="Enter video title..."
                             autoFocus
                         />
