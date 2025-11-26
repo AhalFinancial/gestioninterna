@@ -29,6 +29,24 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid content type" }, { status: 400 });
         }
 
+        // Check storage quota
+        try {
+            const about = await drive.about.get({
+                fields: "storageQuota",
+            });
+            const quota = about.data.storageQuota;
+            if (quota && quota.limit && quota.usage) {
+                const remaining = parseInt(quota.limit) - parseInt(quota.usage);
+                // Check if less than 100MB remaining (arbitrary buffer)
+                if (remaining < 100 * 1024 * 1024) {
+                    return NextResponse.json({ error: "Insufficient storage space in Google Drive" }, { status: 507 });
+                }
+            }
+        } catch (quotaError) {
+            console.warn("Failed to check storage quota:", quotaError);
+            // Continue with upload even if quota check fails, Drive will reject if full
+        }
+
         const busboy = Busboy({ headers: { "content-type": contentType } });
 
         const fields: Record<string, string> = {};
