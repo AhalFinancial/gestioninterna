@@ -124,3 +124,4 @@ See `SUPABASE_MCP_SETUP.md` for detailed setup instructions and troubleshooting.
 
 
 
+

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import Recorder from "@/components/Recorder";
 import VideoLibrary from "@/components/VideoLibrary";
 import VideoPlayer from "@/components/VideoPlayer";
@@ -411,8 +412,11 @@ function HomeContent() {
               <ArrowLeft size={20} />
             </button>
           )}
-          <div className="font-bold text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-            Ahal Clips
+          <div className="flex items-center gap-3">
+            <Image src="/logo.png" alt="Ahal Clips Logo" width={32} height={32} className="object-contain" />
+            <div className="font-bold text-xl tracking-tight bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              Ahal Clips
+            </div>
           </div>
         </div>
 
@@ -424,7 +428,7 @@ function HomeContent() {
             </button>
           ) : (
             <>
-              <button onClick={handleStartRecording} className="btn btn-primary text-sm py-2 px-4 shadow-lg shadow-indigo-500/20">
+              <button onClick={handleStartRecording} className="btn btn-primary text-sm py-2 px-4 shadow-lg shadow-blue-500/20">
                 <Plus size={18} />
                 {t("nav.newVideo")}
               </button>
@@ -433,7 +437,7 @@ function HomeContent() {
               </button>
             </>
           )}
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 border-2 border-slate-800" />
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-500 border-2 border-slate-800" />
         </div>
       </nav>
 
@@ -473,7 +477,7 @@ function HomeContent() {
                     <button
                       onClick={handleUpload}
                       disabled={isUploading}
-                      className="btn btn-secondary text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10"
+                      className="btn btn-secondary text-blue-400 border-blue-500/30 hover:bg-blue-500/10"
                     >
                       <UploadCloud size={18} />
                       {isUploading ? "Uploading..." : "Save to Drive"}
@@ -546,10 +550,10 @@ function HomeContent() {
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-slate-500 border-t border-white/5 bg-slate-900/50">
         <div className="flex items-center justify-center gap-6">
-          <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">
+          <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
             Privacy Policy
           </a>
-          <a href="/terms-of-service.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">
+          <a href="/terms-of-service.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
             Terms of Service
           </a>
         </div>

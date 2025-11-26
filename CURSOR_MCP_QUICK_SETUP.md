@@ -80,3 +80,4 @@ The `.cursor-mcp-config.json` file has been added to `.gitignore` to protect you
 
 
 
+

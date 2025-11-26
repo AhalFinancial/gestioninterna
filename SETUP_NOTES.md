@@ -120,3 +120,4 @@ After running migrations, these tables will be created in your Supabase database
 
 
 
+
