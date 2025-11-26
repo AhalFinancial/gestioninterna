@@ -13,6 +13,8 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^7.0.0",
+    "@types/busboy": "^1.5.4",
+    "busboy": "^1.6.0",
     "googleapis": "^166.0.0",
     "idb": "^8.0.3",
     "lucide-react": "^0.554.0",

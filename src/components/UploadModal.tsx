@@ -66,11 +66,12 @@ export default function UploadModal({ isOpen, onClose, onUploadComplete, current
         setUploadProgress(0); // Reset progress
 
         const formData = new FormData();
-        formData.append("file", file);
+        // Append fields BEFORE file so they are available for streaming parsers
         formData.append("title", file.name.replace(/\.[^/.]+$/, "")); // Remove extension for title
         if (currentFolderId) {
             formData.append("folderId", currentFolderId);
         }
+        formData.append("file", file);
 
         try {
             // Using XMLHttpRequest for progress tracking since fetch doesn't support it easily
@@ -140,8 +141,8 @@ export default function UploadModal({ isOpen, onClose, onUploadComplete, current
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
                         className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition ${isDragging
-                                ? "border-blue-500 bg-blue-500/10"
-                                : "border-white/10 hover:border-blue-500/50 hover:bg-slate-800/50"
+                            ? "border-blue-500 bg-blue-500/10"
+                            : "border-white/10 hover:border-blue-500/50 hover:bg-slate-800/50"
                             }`}
                     >
                         <UploadCloud size={48} className={`mb-4 ${isDragging ? "text-blue-400" : "text-slate-500"}`} />
