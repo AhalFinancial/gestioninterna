@@ -83,6 +83,9 @@ export async function POST(req: Request) {
                         body: file, // Pass the busboy file stream directly
                     },
                     fields: "id, name, webViewLink, webContentLink",
+                    // Force resumable upload for better reliability with large files
+                    // @ts-ignore - uploadType is valid but might not be in the strict types for this overload
+                    uploadType: "resumable",
                 }).then((response) => {
                     resolve(response.data);
                 }).catch((err) => {
