@@ -29,24 +29,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const stream = new Readable();
-        stream.push(buffer);
-        stream.push(null);
+        // Convert Web Stream to Node Stream to avoid buffering entire file in memory again
+        // @ts-ignore - Readable.fromWeb is available in Node 16+
+        const stream = Readable.fromWeb(file.stream());
 
         const fileMetadata: any = {
-            name: title || `Ahal Clip - ${new Date().toLocaleString()}`,
-            mimeType: "video/webm",
+            name: title ? `${title}.${file.name.split('.').pop()}` : file.name,
+            mimeType: file.type || "video/mp4",
+            parents: folderId ? [folderId] : [],
         };
-
-        if (folderId) {
-            fileMetadata.parents = [folderId];
-        }
 
         const response = await drive.files.create({
             requestBody: fileMetadata,
             media: {
-                mimeType: "video/webm",
+                mimeType: file.type || "video/mp4",
                 body: stream,
             },
             fields: "id, name, webViewLink, webContentLink",
@@ -54,14 +50,11 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ file: response.data });
     } catch (error: any) {
-        console.error("Upload error details:", {
-            message: error.message,
-            stack: error.stack,
-            response: error.response?.data
-        });
+        console.error("Upload error details:", error);
 
-        // Return specific error message if available
-        const errorMessage = error.response?.data?.error?.message || error.message || "Upload failed";
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+        // Return specific error message
+        const errorMessage = error.message || "Upload failed";
+        const status = error.code || 500;
+        return NextResponse.json({ error: errorMessage }, { status: status >= 100 && status < 600 ? status : 500 });
     }
 }

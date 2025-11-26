@@ -95,7 +95,7 @@ export default function UploadModal({ isOpen, onClose, onUploadComplete, current
                         setIsUploading(false);
                     }, 1500);
                 } else {
-                    let errorMessage = "Upload failed";
+                    let errorMessage = `Upload failed (${xhr.status})`;
                     try {
                         const response = JSON.parse(xhr.responseText);
                         errorMessage = response.error || errorMessage;
