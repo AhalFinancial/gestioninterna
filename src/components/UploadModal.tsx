@@ -74,46 +74,37 @@ export default function UploadModal({ isOpen, onClose, onUploadComplete, current
         formData.append("file", file);
 
         try {
-            // Using XMLHttpRequest for progress tracking since fetch doesn't support it easily
-            const xhr = new XMLHttpRequest();
+            // Use fetch instead of XHR for better compatibility with Next.js server actions / API routes
+            // Note: fetch doesn't support upload progress natively in browsers yet, 
+            // so we'll simulate it or just show indeterminate state if needed.
+            // For now, we'll just set it to 50% to show activity.
+            setUploadProgress(50);
 
-            xhr.upload.addEventListener("progress", (event) => {
-                if (event.lengthComputable) {
-                    const percentComplete = Math.round((event.loaded / event.total) * 100);
-                    setUploadProgress(percentComplete);
-                }
+            const response = await fetch("/api/drive/upload", {
+                method: "POST",
+                body: formData,
             });
 
-            xhr.addEventListener("load", () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    setSuccess(true);
-                    setTimeout(() => {
-                        onUploadComplete();
-                        onClose();
-                        // Reset state
-                        setFile(null);
-                        setSuccess(false);
-                        setIsUploading(false);
-                    }, 1500);
-                } else {
-                    let errorMessage = `Upload failed (${xhr.status})`;
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        errorMessage = response.error || errorMessage;
-                    } catch (e) { }
-                    setError(errorMessage);
+            if (response.ok) {
+                setUploadProgress(100);
+                setSuccess(true);
+                setTimeout(() => {
+                    onUploadComplete();
+                    onClose();
+                    // Reset state
+                    setFile(null);
+                    setSuccess(false);
                     setIsUploading(false);
-                }
-            });
-
-            xhr.addEventListener("error", () => {
-                setError("Network error occurred during upload.");
+                }, 1500);
+            } else {
+                let errorMessage = `Upload failed (${response.status})`;
+                try {
+                    const data = await response.json();
+                    errorMessage = data.error || errorMessage;
+                } catch (e) { }
+                setError(errorMessage);
                 setIsUploading(false);
-            });
-
-            xhr.open("POST", "/api/drive/upload");
-            xhr.send(formData);
-
+            }
         } catch (err) {
             console.error("Upload error:", err);
             setError("Failed to upload video.");
